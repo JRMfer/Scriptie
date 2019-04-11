@@ -1,3 +1,10 @@
+# AGENT
+# Julien Fer
+# University of Amsterdam
+#
+# This script contains the functionality to computationally visualize either a
+# ZI-U or ZI-C agent.
+
 import numpy as np
 
 class Agent(object):
