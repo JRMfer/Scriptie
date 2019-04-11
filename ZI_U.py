@@ -20,6 +20,8 @@ TIME = 120
 ROUNDS = 6
 VALUATION = np.array([[105, 6], [97, 6], [90, 6], [82, 6], [75, 6], [70, 6]])
 COSTS = np.array([[40, 6], [47, 6], [55, 6], [62, 6], [65, 6], [80, 6]])
+# VALUATION = np.array([[105, 1], [97, 2], [90, 3], [82, 4], [75, 5], [70, 6]])
+# COSTS = np.array([[40, 6], [47, 5], [55, 4], [62, 3], [65, 2], [80, 1]])
 
 # # plots demand/supply curve
 # fig = plt.figure()
@@ -63,7 +65,6 @@ def main():
         print(f"allocative efficiency: {round.surplus / surplus * 100}")
 
         save_plots_transactions(round, counter)
-        print(round.transactions)
 
 def total_surplus():
     """
