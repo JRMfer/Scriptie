@@ -6,10 +6,10 @@ from round import Round
 
 TYPES = ["buyer", "seller"]
 AMOUNT = 12
-TIME = 30
+TIME = 120
 ROUNDS = 6
-VALUATION = np.array([[125, 6], [115, 6], [95, 6], [80, 6], [65, 6], [45, 6]])
-COSTS = np.array([[50, 6], [55, 6], [60, 6], [65, 6], [70, 6], [75, 6]])
+VALUATION = np.array([[105, 6], [97, 6], [90, 6], [82, 6], [75, 6], [70, 6]])
+COSTS = np.array([[40, 6], [47, 6], [55, 6], [62, 6], [65, 6], [80, 6]])
 
 # # plots demand/supply curve
 # fig = plt.figure()
@@ -53,6 +53,7 @@ def main():
         print(f"allocative efficiency: {round.surplus / surplus * 100}")
 
         save_plots_transactions(round, counter)
+        print(round.transactions)
 
 def total_surplus():
     """
@@ -77,8 +78,6 @@ def procces_offer(price, round, agent):
     checks if transaction is possible
     """
 
-    # checks if agent is buyer/seller and
-    # if offer is better than outstanding offer
     if agent.type == "buyer" and price > round.max_bid[1]:
         round.max_bid[0] = agent.id
         round.max_bid[1] = price
@@ -97,7 +96,7 @@ def save_plots_transactions(round, counter):
 
     fig_trans = plt.figure()
     plt.plot(list(range(len(round.transactions))), round.transactions)
-    fig_trans.savefig(f"ZI-U_market1_round{counter + 1}")
+    fig_trans.savefig(f"{round.name}/market_prices/ZI-U_market1_round{counter + 1}")
     plt.close()
 
 

@@ -9,7 +9,7 @@
 import time
 import random
 import numpy as np
-from agent import Agent, Agent_ZI_U
+from agent import Agent, Agent_C
 
 TYPES = ["buyer", "seller"]
 TIME = 30
@@ -20,6 +20,8 @@ class Round(object):
     considering a double auction
     """
 
+    name = ""
+
     def __init__(self, types, amount, valuations, costs):
         """
         Every Round is intiialized with a random distribution of
@@ -27,7 +29,8 @@ class Round(object):
         price transactions, agents who've met, last round and surplus.
         """
 
-        self.agents = self.create_agents(types, amount, valuations, costs)
+        self.agents = self.create_agents_C(types, amount, valuations, costs)
+        Round.name = self.agents[0].name
         self.max_bid = np.array([0, 0])
         self.min_ask = np.array([0, 200])
         self.transactions = []
@@ -37,7 +40,7 @@ class Round(object):
 
     def create_agents(self, types, amount, valuations, costs):
         """
-        Divide the traders into buyers/sellers (BASIC),
+        Divide the traders into buyers/sellers (ZI-U),
         all with specific id, and redemption/cost price
         """
         agents = []
@@ -53,20 +56,20 @@ class Round(object):
 
         return agents
 
-    def create_agents_u(self, types, amount, valuations, costs):
+    def create_agents_C(self, types, amount, valuations, costs):
         """
-        Divide the traders into buyers/sellers (ZI-U),
+        Divide the traders into buyers/sellers (ZI-C),
         all with specific id, and redemption/cost price
         """
         agents = []
         counter = 1
 
         for value, quantity in valuations:
-            agents.append(Agent_ZI_U(counter, "buyer", value, quantity, 0))
+            agents.append(Agent_C(counter, "buyer", value, quantity, 0))
             counter += 1
 
         for cost, quantity in costs:
-            agents.append(Agent_ZI_U(counter, "seller", cost, quantity, 200))
+            agents.append(Agent_C(counter, "seller", cost, quantity, 200))
             counter += 1
 
         return agents
@@ -88,14 +91,12 @@ class Round(object):
         possible_sellers = []
         possible_buyers = []
 
-        # check for all possible sellers
         for agent in self.agents:
             if agent.type == "seller" and agent.price <= self.max_bid[1]:
                 possible_sellers.append(agent)
             elif agent.type == "buyer" and agent.price >= self.min_ask[1]:
                 possible_buyers.append(agent)
 
-        # random seller/buyer
         seller = random.choice(possible_sellers)
         buyer = random.choice(possible_buyers)
 
@@ -104,19 +105,16 @@ class Round(object):
     def preprocces_transaction(self, buyer, seller):
         """
         Adjust quantity seller/buyer, surplus
-        and keep track of transaction price
+        and keep track of transaction price and
+        individual transaction prices and "removes"
+        buyer and seller from the participants
         """
 
-        # adjust quantity, surplus and keep track of transaction price
         buyer.quantity -= 1
         seller.quantity -= 1
-        self.surplus += ((buyer.value - buyer.price) + (buyer.price - seller.value))
+        self.surplus += (buyer.value - seller.value)
         self.transactions.append(buyer.price)
-
-        # keep track of individual transaction prices (only for seller)
-        seller.price = buyer.price
-
-        # "remove" agent temporary from auction
+        seller.transactions.append(buyer.price)
         self.agents = [agent for agent in self.agents if agent not in (buyer, seller)]
 
     def reset_offers(self):
@@ -137,10 +135,9 @@ class Round(object):
     def check_agents(self, buyer, seller):
         """
         Check if agents still need to
-        participate in round
+        participate in future bidings
         """
 
-        # check if quantity is met, if not "save" agents "outside" participants
         if buyer.quantity == 0 or seller.quantity == 0:
             self.last_round = True
         else:
@@ -152,10 +149,39 @@ class Round(object):
         Checks if round need to be reset
         """
 
-        # checks if every agent has traded, if so make them participants again
         if len(self.succes) == 12:
             self.agents = self.succes
             self.succes = []
+
+        # ONLY NECESSARY FOR ZI-C AGENTS!!!!
+        elif not self.check_possible_transactions():
+            self.agents += self.succes
+            self.succes = []
+
+    def check_possible_transactions(self):
+        """
+        Checks if transactions can be made
+        (only important for ZI-C agents)
+        """
+
+        buyers = []
+        sellers = []
+
+        for agent in self.agents:
+            if agent.type == "buyer":
+                buyers.append(agent.value)
+            elif agent.type == "seller":
+                sellers.append(agent.value)
+
+        deal = 0
+        for buy, sell in zip(buyers, sellers):
+            if buy >= sell:
+                deal += 1
+
+        if deal:
+            return True
+
+        return False
 
     def make_transaction(self):
         """
@@ -167,9 +193,6 @@ class Round(object):
 
         buyer, seller = self.pick_agents_transactions()
         self.preprocces_transaction(buyer, seller)
-
-        # reset offers
         self.reset_offers()
-
         self.check_agents(buyer, seller)
         self.check_round()
