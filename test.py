@@ -1,13 +1,22 @@
 import numpy as np
 import matplotlib.pylab as plt
 import time
+import random
 from round import Round
 
 TYPES = ["buyer", "seller"]
 AMOUNT = 12
 TIME = 30
-VALUATION = np.array([[125, 6], [115, 6], [95, 6], [80, 6], [65, 6], [55, 6]])
-COSTS = np.array([[75, 6], [70, 6], [65, 6], [60, 6], [55, 6], [50, 6]])
+ROUNDS = 6
+VALUATION = np.array([[125, 6], [115, 6], [95, 6], [80, 6], [65, 6], [45, 6]])
+COSTS = np.array([[50, 6], [55, 6], [60, 6], [65, 6], [70, 6], [75, 6]])
+
+# # plots demand/supply curve
+# fig = plt.figure()
+# plt.step(np.arange(0,6), VALUATION[:,0])
+# plt.step(np.arange(0,6), COSTS[:,0])
+# fig.savefig('curves_market1.png')
+# plt.close()
 
 def main():
 
@@ -15,58 +24,80 @@ def main():
     surplus = total_surplus()
     print(f"max surplus: {surplus}")
 
-    # create trading round
-    round = Round(TYPES, AMOUNT, VALUATION, COSTS)
+    for counter in range(ROUNDS):
 
-    t_end = time.time() + TIME
-    while time.time() < t_end:
+        # create trading round and set time for round
+        round = Round(TYPES, AMOUNT, VALUATION, COSTS)
+        t_end = time.time() + TIME
 
-        if len(round.agents) > 1:
-            # select random agent
-            number = np.random.randint(0, len(round.agents) - 1)
-            agent = round.agents[number]
+        # while time of round hasn't end
+        while time.time() < t_end:
 
-            # make offer
-            price = agent.offer_price()
+            # check if round can continue
+            if not_last_round(round.agents, round.last_round):
 
-            if price:
+                # select random agent and make offer
+                agent = random.choice(round.agents)
+                price = agent.offer_price()
 
-                # checks if agent is buyer/seller and
-                # if offer is better than outstanding offer
-                if agent.type == "buyer" and price > round.max_bid[1]:
-                    round.max_bid[0] = agent.id
-                    round.max_bid[1] = price
+                # check if offer was valid
+                if price:
+                    procces_offer(price, round, agent)
+            else:
+                print("true")
+                break
 
-                elif agent.type == "seller" and price < round.min_ask[1]:
-                    round.min_ask[0] = agent.id
-                    round.min_ask[1] = price
+        # prints allocative efficiency
+        print(f"surplus: {round.surplus}")
+        print(f"allocative efficiency: {round.surplus / surplus * 100}")
 
-                if round.check_transaction():
-                    round.make_transaction()
-
-        else:
-            break
-
-    # plots demand/supply curve
-    # plt.step(np.arange(0,6), VALUATION[:,0])
-    # plt.step(np.arange(0,6), COSTS[:,0])
-    # plt.show()
-
-    # prints allocative efficiency
-    print(f"surplus: {round.surplus}")
-    print(f"allocative efficiency: {round.surplus / surplus * 100}")
-
-    # plot transaction price against time
-    plt.plot(list(range(len(round.transactions))), round.transactions)
-    plt.show()
+        save_plots_transactions(round, counter)
 
 def total_surplus():
+    """
+    Calculates max total surplus
+    """
 
     surplus = 0;
     for i in range(len(VALUATION)):
         surplus += (VALUATION[i][0] - COSTS[i][0]) * COSTS[i][1]
 
     return surplus
+
+def not_last_round(agents, last_round):
+    """
+    Checks for last round
+    """
+    return len(agents) > 1 and not last_round
+
+def procces_offer(price, round, agent):
+    """
+    Adjust outstanding offer, if bid is better, and
+    checks if transaction is possible
+    """
+
+    # checks if agent is buyer/seller and
+    # if offer is better than outstanding offer
+    if agent.type == "buyer" and price > round.max_bid[1]:
+        round.max_bid[0] = agent.id
+        round.max_bid[1] = price
+
+    elif agent.type == "seller" and price < round.min_ask[1]:
+        round.min_ask[0] = agent.id
+        round.min_ask[1] = price
+
+    if round.check_transaction():
+        round.make_transaction()
+
+def save_plots_transactions(round, counter):
+    """
+    Save plot figures transaction prices per round
+    """
+
+    fig_trans = plt.figure()
+    plt.plot(list(range(len(round.transactions))), round.transactions)
+    fig_trans.savefig(f"ZI-U_market1_round{counter + 1}")
+    plt.close()
 
 
 if __name__ =="__main__":
