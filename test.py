@@ -24,6 +24,7 @@ def main():
     surplus = total_surplus()
     print(f"max surplus: {surplus}")
 
+    # repeat simulation for ROUNDS times
     for counter in range(ROUNDS):
 
         # create trading round and set time for round
