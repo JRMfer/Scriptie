@@ -14,7 +14,7 @@ class Agent(object):
     """
     name = "ZI-U"
 
-    def __init__(self, id, type, valuation, quantity, max):
+    def __init__(self, id, type, value, quantity, max):
         """
         Every agent is intiialized as buyer/seller
         with id, redemption/cost price and
@@ -24,9 +24,9 @@ class Agent(object):
 
         self.id = id
         self.type = type
-        self.valuation = valuation
+        self.value = value
         self.quantity = quantity
-        self.bid = max
+        self.price = max
         self.transactions = []
 
     def __str__(self):
@@ -42,9 +42,8 @@ class Agent(object):
         """
 
         price = np.random.randint(1, 200)
-        # print(f"Price: {price}")
         if self.check_bid(price):
-            self.bid = price
+            self.price = price
             return price
         return 0
 
@@ -54,9 +53,9 @@ class Agent(object):
         """
 
         if self.type == "buyer":
-            return price > self.bid
+            return price > self.price
         elif self.type == "seller":
-            return price < self.bid
+            return price < self.price
 
 class Agent_C(Agent):
     """
@@ -71,11 +70,11 @@ class Agent_C(Agent):
         """
 
         if self.type == "buyer":
-            price = np.random.randint(1, self.valuation)
+            price = np.random.randint(1, self.value)
         elif self.type == "seller":
-            price = np.random.randint(self.valuation, 200)
+            price = np.random.randint(self.value, 200)
 
         if self.check_bid(price):
-            self.bid = price
+            self.price = price
             return price
         return 0

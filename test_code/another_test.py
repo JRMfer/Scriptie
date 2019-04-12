@@ -12,14 +12,16 @@ import numpy as np
 import matplotlib.pylab as plt
 import time
 import random
-from round import Round
+from another_round import Round
 
 TYPES = ["buyer", "seller"]
 AMOUNT = 12
 TIME = 120
 ROUNDS = 6
-VALUATION = np.array([[105, 6], [97, 6], [90, 6], [82, 6], [75, 6], [70, 6]])
-COSTS = np.array([[40, 6], [47, 6], [55, 6], [62, 6], [65, 6], [80, 6]])
+VALUATION = np.array([[105, 5], [97, 10], [90, 15], [82, 20], [75, 25], [70, 30]])
+COSTS = np.array([[40, 30], [47, 25], [55, 20], [62, 15], [65, 10], [80, 5]])
+# VALUATION = np.array([[105, 6], [97, 6], [90, 6], [82, 6], [75, 6], [70, 6]])
+# COSTS = np.array([[40, 6], [47, 6], [55, 6], [62, 6], [65, 6], [80, 6]])
 # VALUATION = np.array([[105, 1], [97, 2], [90, 3], [82, 4], [75, 5], [70, 6]])
 # COSTS = np.array([[40, 6], [47, 5], [55, 4], [62, 3], [65, 2], [80, 1]])
 
@@ -36,35 +38,40 @@ def main():
     surplus = total_surplus()
     print(f"max surplus: {surplus}")
 
-    # repeat simulation for ROUNDS times
-    for counter in range(ROUNDS):
+    # create round
+    round = Round(TYPES, AMOUNT, VALUATION, COSTS)
+    t_end = time.time() + TIME
 
-        # create trading round and set time for round
-        round = Round(TYPES, AMOUNT, VALUATION, COSTS)
-        t_end = time.time() + TIME
+    # while time rounds hasn't ended
+    while time.time() < t_end:
 
-        # while time of round hasn't end
-        while time.time() < t_end:
+        # check if round can continue
+        if not round.last_round:
 
-            # check if round can continue
-            if not_last_round(round.agents, round.last_round):
+            # select random agent and make offer
+            agent = random.choice(round.agents)
+            price = agent.offer_price()
+            print(f"max bid: {round.max_bid[1]}")
+            print(f"min ask: {round.min_ask[1]}")
+            print(f"Agent with TYPE: {agent.type} and PRICE {price}")
 
-                # select random agent and make offer
-                agent = random.choice(round.agents)
-                price = agent.offer_price()
+            # check if offer was valid
+            if price:
+                procces_offer(price, round, agent)
 
-                # check if offer was valid
-                if price:
-                    procces_offer(price, round, agent)
-            else:
-                print("true")
-                break
+                if round.reset_round():
+                    round.agents += round.succes
+                    round.succes = []
+                elif round.check_last_round():
+                    round.last_round = True
 
-        # prints allocative efficiency
-        print(f"surplus: {round.surplus}")
-        print(f"allocative efficiency: {round.surplus / surplus * 100}")
+        else:
+            break
 
-        save_plots_transactions(round, counter)
+    # prints allocative efficiency
+    print(f"surplus: {round.surplus}")
+    print(f"allocative efficiency: {round.surplus / surplus * 100}")
+
 
 def total_surplus():
     """

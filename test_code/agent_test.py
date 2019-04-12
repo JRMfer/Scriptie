@@ -41,7 +41,7 @@ class Agent(object):
         Random offer strategy of ZI-U trader
         """
 
-        price = np.random.randint(1, 200)
+        price = round(np.random.uniform(1, 200), 2)
         # print(f"Price: {price}")
         if self.check_bid(price):
             self.bid = price
@@ -71,9 +71,9 @@ class Agent_C(Agent):
         """
 
         if self.type == "buyer":
-            price = np.random.randint(1, self.valuation)
+            price = round(np.random.uniform(1, self.valuation), 2)
         elif self.type == "seller":
-            price = np.random.randint(self.valuation, 200)
+            price = round(np.random.uniform(self.valuation, 200), 2)
 
         if self.check_bid(price):
             self.bid = price

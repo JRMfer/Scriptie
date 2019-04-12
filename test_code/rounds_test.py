@@ -118,6 +118,7 @@ class Round(object):
         buyer.price = 0
         seller.price = 200
         self.agents = [agent for agent in self.agents if agent not in (buyer, seller)]
+        # print(f"surplus: {self.surplus}")
         # print(f"agents: {len(self.agents)}")
         # print(f"succes: {len(self.succes)}")
         # print(f"Possible: {self.check_possible_transactions()}")
@@ -131,8 +132,9 @@ class Round(object):
 
         self.max_bid = np.array([0, 0])
         self.min_ask = np.array([0, 200])
+        paticipants = self.agents + self.succes
 
-        for agent in self.agents:
+        for agent in participants:
             if agent.type == "buyer":
                 agent.price = 0
             elif agent.type == "seller":
@@ -149,9 +151,9 @@ class Round(object):
         # else:
         #     self.succes.append(buyer)
         #     self.succes.append(seller)
-        if buyer.quantity:
+        if buyer.quantity > 0:
             self.succes.append(buyer)
-        if seller.quantity:
+        if seller.quantity > 0:
             self.succes.append(seller)
 
     def check_possible_transactions(self):
@@ -213,8 +215,11 @@ class Round(object):
         Checks if round need to be reset
         """
 
-        if not self.agents or not self.check_all_possible_transactions():
+        if (not self.agents and not self.succes) or not self.check_all_possible_transactions():
             self.last_round = True
+        elif not self.agents and self.check_all_possible_transactions():
+            self.agents = self.succes
+            self.succes = []
         elif not self.check_possible_transactions() and self.check_all_possible_transactions():
             self.agents = list(set(self.agents + self.succes))
             self.succes = []
