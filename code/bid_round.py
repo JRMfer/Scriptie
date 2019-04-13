@@ -17,7 +17,7 @@ TIME = 30
 class Round(object):
     """
     Reprensentation of the structure of bidding round
-    considering a double auction
+    considering a double auction for ZI-U traders
     """
 
     name = "ZI-U"
@@ -80,18 +80,12 @@ class Round(object):
 
         possible_sellers = []
         possible_buyers = []
-        # print(f"length agents: {len(self.agents)}")
-        # for agent in self.agents:
-            # print(f"TYPE: {agent.type} and BID: {agent.bid}")
 
         for agent in self.agents:
             if agent.type == "seller" and agent.bid <= self.max_bid[1]:
                 possible_sellers.append(agent)
             elif agent.type == "buyer" and agent.bid >= self.min_ask[1]:
                 possible_buyers.append(agent)
-
-        # print(f"length sellers: {len(possible_sellers)}")
-        # print(f"length buyers: {len(possible_buyers)}")
 
         seller = random.choice(possible_sellers)
         buyer = random.choice(possible_buyers)
@@ -115,8 +109,6 @@ class Round(object):
         buyer.bid = 0
         seller.bid = 201
         self.agents = [agent for agent in self.agents if agent not in (buyer, seller)]
-        # print("DEAL")
-        # print(f"Surplus: {self.surplus}")
 
     def reset_offers(self):
         """
@@ -164,10 +156,7 @@ class Round(object):
             elif agent.type == "seller":
                 sellers += 1
 
-        if buyers > 0 and sellers > 0:
-            return True
-
-        return False
+        return buyers and sellers
 
     def check_all_participants(self):
         """
@@ -187,10 +176,7 @@ class Round(object):
             elif agent.type == "seller":
                 sellers += 1
 
-        if buyers > 0 and sellers > 0:
-            return True
-
-        return False
+        return buyers and sellers
 
 
     def reset_round(self):
@@ -213,10 +199,19 @@ class Round(object):
 
 
 class Round_C(Round):
+    """
+    Reprensentation of the structure of bidding round
+    considering a double auction for ZI-C traders
+    """
 
     name = "ZI-C"
 
     def __init__(self, types, amount, valuations, costs):
+        """
+        Every Round is intiialized with a random distribution of
+        buyers/sellers and variables to keep track of max bid, min ask,
+        price transactions, agents who've met, last round and surplus.
+        """
         Round.__init__(self, types, amount, valuations, costs)
         self.agents = self.create_agents(types, amount, valuations, costs)
         self.max_bid = [0, 0]
@@ -271,10 +266,7 @@ class Round_C(Round):
             if any(sell <= buy for sell in sellers):
                 deal += 1
 
-        if deal:
-            return True
-
-        return False
+        return deal
 
     def check_all_participants(self):
         """
@@ -303,7 +295,4 @@ class Round_C(Round):
             if any(sell <= buy for sell in sellers):
                 deal += 1
 
-        if deal:
-            return True
-
-        return False
+        return deal

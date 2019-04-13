@@ -25,17 +25,9 @@ COSTS = np.array([[40, 5], [47, 10], [55, 15], [62, 20], [77, 25], [85, 30]])
 # VALUATION = np.array([[105, 1], [97, 2], [90, 3], [82, 4], [75, 5], [70, 6]])
 # COSTS = np.array([[40, 6], [47, 5], [55, 4], [62, 3], [65, 2], [80, 1]])
 
-# # plots demand/supply curve
-# fig = plt.figure()
-# plt.step(np.arange(0,6), VALUATION[:,0])
-# plt.step(np.arange(0,6), COSTS[:,0])
-# fig.savefig('curves_market1.png')
-# plt.close()
-
 def main():
 
     simulation(ROUNDS, TYPES, AMOUNT, VALUATION, COSTS)
-
 
 def simulation(rounds, types, amount, valuations, costs):
 
@@ -49,7 +41,7 @@ def simulation(rounds, types, amount, valuations, costs):
     for counter in range(rounds):
 
         # create round and set time to 30 seconds
-        round = Round(types, amount, valuations, costs)
+        round = Round_C(types, amount, valuations, costs)
         t_end = time.time() + TIME
 
         # while time rounds hasn't ended
@@ -114,7 +106,7 @@ def not_last_round(agents, last_round):
 def procces_offer(price, round, agent):
     """
     Adjust outstanding offer, if bid is better, and
-    checks if transaction is possible
+    checks if transaction is possible, if so make transaction
     """
 
     if agent.type == "buyer" and price > round.max_bid[1]:
