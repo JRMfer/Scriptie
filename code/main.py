@@ -19,7 +19,7 @@ AMOUNT = 12
 TIME = 120
 ROUNDS = 6
 VALUATION = np.array([[105, 5], [97, 10], [90, 15], [82, 20], [75, 25], [70, 30]])
-COSTS = np.array([[40, 30], [47, 25], [55, 20], [62, 15], [65, 10], [80, 5]])
+COSTS = np.array([[40, 5], [47, 10], [55, 15], [62, 20], [77, 25], [85, 30]])
 # VALUATION = np.array([[105, 6], [97, 6], [90, 6], [82, 6], [75, 6], [70, 6]])
 # COSTS = np.array([[40, 6], [47, 6], [55, 6], [62, 6], [65, 6], [80, 6]])
 # VALUATION = np.array([[105, 1], [97, 2], [90, 3], [82, 4], [75, 5], [70, 6]])
@@ -34,31 +34,36 @@ COSTS = np.array([[40, 30], [47, 25], [55, 20], [62, 15], [65, 10], [80, 5]])
 
 def main():
 
+    simulation(ROUNDS, TYPES, AMOUNT, VALUATION, COSTS)
+
+
+def simulation(rounds, types, amount, valuations, costs):
+
     # calculate max total surplus
     surplus = total_surplus()
     print(f"max surplus: {surplus}")
 
-    for counter in range(ROUNDS):
-        # create round
-        round = Round_C(TYPES, AMOUNT, VALUATION, COSTS)
+    plot_demand_supply(valuations, costs, "Market_1")
+
+    # simulate the amount of rounds
+    for counter in range(rounds):
+
+        # create round and set time to 30 seconds
+        round = Round(types, amount, valuations, costs)
         t_end = time.time() + TIME
 
         # while time rounds hasn't ended
         while time.time() < t_end:
 
-            # check if round can continue
+            # check if round can continue (not last round)
             if not round.last_round:
 
                 # select random agent and make offer
                 agent = random.choice(round.agents)
                 price = agent.offer_price()
-                # print(f"max bid: {round.max_bid[1]}")
-                # print(f"min ask: {round.min_ask[1]}")
-                # print(f"Agent with TYPE: {agent.type} and PRICE {price}")
 
-                # check if offer was valid
+                # check if offer was valid (better than own price)
                 if price:
-                    # print("negotiate")
                     procces_offer(price, round, agent)
 
                     if round.reset_round():
@@ -75,7 +80,6 @@ def main():
         print(f"allocative efficiency: {round.surplus / surplus * 100}")
         save_plots_transactions(round, counter)
 
-
 def total_surplus():
     """
     Calculates max total surplus
@@ -83,9 +87,23 @@ def total_surplus():
 
     surplus = 0;
     for i in range(len(VALUATION)):
-        surplus += (VALUATION[i][0] - COSTS[i][0]) * COSTS[i][1]
+        if VALUATION[i][0] >= COSTS[i][0]:
+            surplus += (VALUATION[i][0] - COSTS[i][0]) * COSTS[i][1]
 
     return surplus
+
+def plot_demand_supply(valuations, costs, market):
+
+    # plots demand/supply curve
+    fig = plt.figure()
+    plt.step(valuations[:,1], valuations[:,0], label="Demand")
+    plt.step(costs[:,1], costs[:,0], label="Supply")
+    plt.title(f"Demand/Supply curves for {market}")
+    plt.xlabel("Quantity")
+    plt.ylabel("Price")
+    plt.legend(loc='upper right')
+    fig.savefig(f'curves_{market}.png')
+    plt.close()
 
 def not_last_round(agents, last_round):
     """
@@ -117,6 +135,9 @@ def save_plots_transactions(round, counter):
 
     fig_trans = plt.figure()
     plt.plot(list(range(len(round.transactions))), round.transactions)
+    plt.title(f"The development of transaction prices (Market 1) round: {counter + 1}")
+    plt.xlabel("Number of transactions")
+    plt.ylabel("Transactions price")
     fig_trans.savefig(f"../{round.name}/market_prices/{round.name}_market1_round{counter + 1}")
     plt.close()
 
