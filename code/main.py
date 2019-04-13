@@ -4,9 +4,9 @@
 #
 # This script generates an ABM model based on either ZI-U or ZI-C agents.
 # Several rounds (30 seconds) are generated. In every rounds the agents are
-# equally divided in buyers and sellers. In every loop an agent will be selected
-# at random and it will makes its offer and checks all the neceassary to
-# simulate the rules of a double auction.
+# equally divided in buyers and sellers and in every loop (bid round) an agent
+# will be selected at random and it will makes its offer and checks
+# all the neceassary to simulate the rules of a double auction.
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -30,6 +30,12 @@ def main():
     simulation(ROUNDS, TYPES, AMOUNT, VALUATION, COSTS)
 
 def simulation(rounds, types, amount, valuations, costs):
+    """
+    Starts bidding simulation for
+    a certain amount of rounds, agents and
+    a given distribution of the redemption
+    and cost value of the buyers/sellers
+    """
 
     # calculate max total surplus
     surplus = total_surplus()
@@ -64,6 +70,7 @@ def simulation(rounds, types, amount, valuations, costs):
                     elif round.check_last_round():
                         round.last_round = True
 
+            # if round cannot continue, break out of loop (round)
             else:
                 break
 
@@ -85,8 +92,10 @@ def total_surplus():
     return surplus
 
 def plot_demand_supply(valuations, costs, market):
+    """
+    Plots demand and supply curve of given market
+    """
 
-    # plots demand/supply curve
     fig = plt.figure()
     plt.step(valuations[:,1], valuations[:,0], label="Demand")
     plt.step(costs[:,1], costs[:,0], label="Supply")
