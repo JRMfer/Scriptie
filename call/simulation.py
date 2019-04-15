@@ -12,11 +12,11 @@ import numpy as np
 import matplotlib.pylab as plt
 import time
 import random
-from bid_round import Round, Round_C
+from transaction_period import Round, Round_C
 
 TYPES = ["buyer", "seller"]
 AMOUNT = 12
-TIME = 120
+TIME = 30
 ROUNDS = 6
 VALUATION = np.array([[105, 5], [97, 10], [90, 15], [82, 20], [75, 25], [70, 30]])
 COSTS = np.array([[40, 5], [47, 10], [55, 15], [62, 20], [77, 25], [85, 30]])
@@ -27,9 +27,9 @@ COSTS = np.array([[40, 5], [47, 10], [55, 15], [62, 20], [77, 25], [85, 30]])
 
 def main():
 
-    simulation(ROUNDS, TYPES, AMOUNT, VALUATION, COSTS)
+    simulation(ROUNDS, AMOUNT, VALUATION, COSTS)
 
-def simulation(rounds, types, amount, valuations, costs):
+def simulation(rounds, amount, valuations, costs):
     """
     Starts bidding simulation for
     a certain amount of rounds, agents and
@@ -47,37 +47,47 @@ def simulation(rounds, types, amount, valuations, costs):
     for counter in range(rounds):
 
         # create round and set time to 30 seconds
-        round = Round_C(types, amount, valuations, costs)
+        period = Round(amount, valuations, costs)
         t_end = time.time() + TIME
 
         # while time rounds hasn't ended
         while time.time() < t_end:
 
             # check if round can continue (not last round)
-            if not round.last_round:
+            if not period.last_round:
 
                 # select random agent and make offer
-                agent = random.choice(round.agents)
-                price = agent.offer_price()
+                agent = random.choice(period.agents)
+
+                if agent.type == "buyer":
+                    price = agent.offer_price(period.max_bid["price"])
+
+                elif agent.type == "seller":
+                    price = agent.offer_price(period.min_ask["price"])
+
+                # price = agent.offer_price()
 
                 # check if offer was valid (better than own price)
                 if price:
-                    procces_offer(price, round, agent)
+                    procces_offer(price, period, agent)
 
-                    if round.reset_round():
-                        round.agents += round.succes
-                        round.succes = []
-                    elif round.check_last_round():
-                        round.last_round = True
+                    if period.reset_round():
+                        period.agents += period.succes
+                        period.succes = []
+                    elif period.check_last_round():
+                        period.last_round = True
+
+                # else:
+                #     print("False")
 
             # if round cannot continue, break out of loop (round)
             else:
                 break
 
         # prints allocative efficiency
-        print(f"surplus: {round.surplus}")
-        print(f"allocative efficiency: {round.surplus / surplus * 100}")
-        save_plots_transactions(round, counter)
+        print(f"surplus: {period.surplus}")
+        print(f"allocative efficiency: {round(period.surplus / surplus * 100, 2)}%")
+        save_plots_transactions(period, counter)
 
 def total_surplus():
     """
@@ -118,13 +128,13 @@ def procces_offer(price, round, agent):
     checks if transaction is possible, if so make transaction
     """
 
-    if agent.type == "buyer" and price > round.max_bid[1]:
-        round.max_bid[0] = agent.id
-        round.max_bid[1] = price
+    if agent.type == "buyer" and price > round.max_bid["price"]:
+        round.max_bid["id"] = agent.id
+        round.max_bid["price"] = price
 
-    elif agent.type == "seller" and price < round.min_ask[1]:
-        round.min_ask[0] = agent.id
-        round.min_ask[1] = price
+    elif agent.type == "seller" and price < round.min_ask["price"]:
+        round.min_ask["id"] = agent.id
+        round.min_ask["price"] = price
 
     if round.check_transaction():
         round.make_transaction()
@@ -139,7 +149,7 @@ def save_plots_transactions(round, counter):
     plt.title(f"The development of transaction prices (Market 1) round: {counter + 1}")
     plt.xlabel("Number of transactions")
     plt.ylabel("Transactions price")
-    fig_trans.savefig(f"../{round.name}/market_prices/{round.name}_market1_round{counter + 1}")
+    fig_trans.savefig(f"{round.name}/market_prices/{round.name}_market1_round{counter + 1}")
     plt.close()
 
 

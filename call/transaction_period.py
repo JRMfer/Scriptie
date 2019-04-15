@@ -22,22 +22,24 @@ class Round(object):
 
     name = "ZI-U"
 
-    def __init__(self, types, amount, valuations, costs):
+    def __init__(self, amount, valuations, costs):
         """
         Every Round is intiialized with a random distribution of
         buyers/sellers and variables to keep track of max bid, min ask,
         price transactions, agents who've met, last round and surplus.
         """
 
-        self.agents = self.create_agents(types, amount, valuations, costs)
-        self.max_bid = np.array([0, 0])
-        self.min_ask = np.array([0, 201])
+        self.agents = self.create_agents(amount, valuations, costs)
+        # self.max_bid = np.array([0, 0])
+        # self.min_ask = np.array([0, 201])
+        self.max_bid = {"id": 0, "price": 1}
+        self.min_ask = {"id": 0, "price": 200}
         self.transactions = []
         self.succes = []
         self.last_round = False
         self.surplus = 0
 
-    def create_agents(self, types, amount, valuations, costs):
+    def create_agents(self, amount, valuations, costs):
         """
         Divide the traders into buyers/sellers (ZI-U),
         all with specific id, and redemption/cost price
@@ -46,11 +48,11 @@ class Round(object):
         counter = 1
 
         for value, quantity in valuations:
-            agents.append(Agent(counter, "buyer", value, quantity, 0))
+            agents.append(Agent(counter, "buyer", value, quantity, 1))
             counter += 1
 
         for cost, quantity in costs:
-            agents.append(Agent(counter, "seller", cost, quantity, 201))
+            agents.append(Agent(counter, "seller", cost, quantity, 200))
             counter += 1
 
         return agents
@@ -60,7 +62,7 @@ class Round(object):
         Checks if at least one transaction is possible
         """
 
-        return self.max_bid[1] >= self.min_ask[1]
+        return self.max_bid["price"] >= self.min_ask["price"]
 
     def make_transaction(self):
         """
@@ -82,10 +84,16 @@ class Round(object):
         possible_buyers = []
 
         for agent in self.agents:
-            if agent.type == "seller" and agent.bid <= self.max_bid[1]:
+            if agent.type == "seller" and agent.bid <= self.max_bid["price"]:
                 possible_sellers.append(agent)
-            elif agent.type == "buyer" and agent.bid >= self.min_ask[1]:
+            elif agent.type == "buyer" and agent.bid >= self.min_ask["price"]:
                 possible_buyers.append(agent)
+
+        # print(f"Length Buyers: {len(possible_buyers)}")
+        # print(f"Length Sellers: {len(possible_sellers)}")
+        # print(f"Length All Agents: {len(self.agents)}")
+        # for agent in self.agents:
+        #     print(f"Agent with type: {agent.type} and outstanding bid: {agent.bid}")
 
         seller = random.choice(possible_sellers)
         buyer = random.choice(possible_buyers)
@@ -104,10 +112,10 @@ class Round(object):
         seller.quantity -= 1
         self.surplus += buyer.valuation - seller.valuation
         self.transactions.append(buyer.bid)
-        buyer.transactions.append(buyer.bid)
-        seller.transactions.append(buyer.bid)
-        buyer.bid = 0
-        seller.bid = 201
+        buyer.profits.append(buyer.valuation - buyer.bid)
+        seller.profits.append(buyer.bid - seller.valuation)
+        buyer.bid = 1
+        seller.bid = 200
         self.agents = [agent for agent in self.agents if agent not in (buyer, seller)]
 
     def reset_offers(self):
@@ -116,13 +124,13 @@ class Round(object):
         after a transaction
         """
 
-        self.max_bid = np.array([0, 0])
-        self.min_ask = np.array([0, 200])
+        self.max_bid = {"id": 0, "price": 1}
+        self.min_ask = {"id": 0, "price": 200}
         participants = self.agents + self.succes
 
         for agent in participants:
             if agent.type == "buyer":
-                agent.bid = 0
+                agent.bid = 1
             elif agent.type == "seller":
                 agent.bid = 200
 
@@ -206,23 +214,23 @@ class Round_C(Round):
 
     name = "ZI-C"
 
-    def __init__(self, types, amount, valuations, costs):
+    def __init__(self, amount, valuations, costs):
         """
         Every Round is intiialized with a random distribution of
         buyers/sellers and variables to keep track of max bid, min ask,
         price transactions, agents who've met, last round and surplus.
         """
-        Round.__init__(self, types, amount, valuations, costs)
-        self.agents = self.create_agents(types, amount, valuations, costs)
-        self.max_bid = [0, 0]
-        self.min_ask = [0, 200]
+        Round.__init__(self, amount, valuations, costs)
+        self.agents = self.create_agents(amount, valuations, costs)
+        self.max_bid = {"id": 0, "price": 1}
+        self.min_ask = {"id": 0, "price": 200}
         self.transactions = []
         self.succes = []
         self.last_round = False
         self.surplus = 0
 
 
-    def create_agents(self, types, amount, valuations, costs):
+    def create_agents(self, amount, valuations, costs):
         """
         Divide the traders into buyers/sellers (ZI-C),
         all with specific id, and redemption/cost price

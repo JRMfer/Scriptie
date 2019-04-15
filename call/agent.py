@@ -27,7 +27,7 @@ class Agent(object):
         self.valuation = valuation
         self.quantity = quantity
         self.bid = max
-        self.transactions = []
+        self.profits = []
 
     def __str__(self):
         """
@@ -36,27 +36,21 @@ class Agent(object):
         return f"This agent is of the type {self.type} with id: {self.id} and " \
                 f"has preferences price: {self.value} and quantity: {self.quantity}"
 
-    def offer_price(self):
+    def offer_price(self, price):
         """
         Random offer strategy of ZI-U trader
         """
-
-        price = np.random.randint(1, 200)
-        # print(f"Price: {price}")
-        if self.check_bid(price):
-            self.bid = price
-            return price
-        return 0
-
-    def check_bid(self, price):
-        """
-        Check if bid is better than it's own bid
-        """
-
         if self.type == "buyer":
-            return price > self.bid
+            bid = np.random.randint(price, 200)
+            self.bid = bid
+            return bid
+
         elif self.type == "seller":
-            return price < self.bid
+            bid = np.random.randint(1, price)
+            self.bid = bid
+            return bid
+        else:
+            return 0
 
 class Agent_C(Agent):
     """
@@ -65,17 +59,18 @@ class Agent_C(Agent):
 
     name = "ZI-C"
 
-    def offer_price(self):
+    def offer_price(self, bid):
         """
         Random offer strategy for a ZI-C agent
         """
 
-        if self.type == "buyer":
-            price = np.random.randint(1, self.valuation)
-        elif self.type == "seller":
-            price = np.random.randint(self.valuation, 200)
+        if self.type == "buyer" and bid < self.valuation:
+            bid =  np.random.randint(bid, self.valuation)
+            self.bid = bid
+            return bid
+        elif self.type == "seller" and bid > self.valuation:
+            bid = np.random.randint(self.valuation, bid)
+            self.bid = bid
+            return bid
 
-        if self.check_bid(price):
-            self.bid = price
-            return price
         return 0
